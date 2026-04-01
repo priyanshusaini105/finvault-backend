@@ -1,12 +1,11 @@
 import type { Response } from 'express';
-import { HttpStatus } from '@/constants/httpStatus';
 
 export class ApiResponse {
   static success<T>(
     res: Response,
     message: string,
     data: T,
-    statusCode = HttpStatus.OK,
+    statusCode: number = 200,
   ) {
     return res.status(statusCode).json({
       success: true as const,
@@ -21,7 +20,7 @@ export class ApiResponse {
     data: T,
     meta: { page: number; limit: number; total: number },
   ) {
-    return res.status(HttpStatus.OK).json({
+    return res.status(200).json({
       success: true as const,
       message,
       data,

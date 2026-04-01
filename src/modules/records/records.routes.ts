@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type Router as RouterType } from 'express';
 import {
   createRecord,
   listRecords,
@@ -15,7 +15,7 @@ import {
   updateRecordSchema,
 } from './records.schemas';
 
-const router = Router();
+const router: RouterType = Router();
 
 router.post(
   '/',

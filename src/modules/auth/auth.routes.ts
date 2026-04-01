@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type Router as RouterType } from 'express';
 import { register, login, getMe } from './auth.controller';
 import { validate } from '@/middleware/validate';
 import { requireAuth } from '@/middleware/auth';
@@ -7,7 +7,7 @@ import {
   loginSchema,
 } from './auth.schemas';
 
-const router = Router();
+const router: RouterType = Router();
 
 router.post('/register', validate(registerSchema), register);
 router.post('/login', validate(loginSchema), login);

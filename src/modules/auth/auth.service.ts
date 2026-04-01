@@ -1,7 +1,7 @@
 import prisma from '@/config/db';
 import type { Role } from '@prisma/client';
 import { hash, compare } from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import jwt, { type SignOptions } from 'jsonwebtoken';
 import { env } from '@/config/env';
 import { ApiError } from '@/utils/ApiError';
 import type { RegisterInput, LoginInput } from './auth.schemas';
@@ -9,7 +9,7 @@ import type { JwtPayload } from '@/types/express';
 
 function signToken(payload: JwtPayload): string {
   return jwt.sign(payload, env.JWT_SECRET, {
-    expiresIn: env.JWT_EXPIRES_IN,
+    expiresIn: env.JWT_EXPIRES_IN as unknown as number,
   });
 }
 

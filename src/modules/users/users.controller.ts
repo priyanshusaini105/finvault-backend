@@ -25,7 +25,10 @@ export const listUsers = asyncHandler(
 export const updateRole = asyncHandler(
   async (req: Request, res: Response, _next: NextFunction) => {
     const { role } = req.body as { role: Role };
-    const user = await usersService.updateRole(req.params.id, role);
+    const user = await usersService.updateRole(
+      req.params.id as string,
+      role,
+    );
     return ApiResponse.success(res, 'User role updated', user);
   },
 );
@@ -34,7 +37,7 @@ export const toggleStatus = asyncHandler(
   async (req: Request, res: Response, _next: NextFunction) => {
     const { isActive } = req.body as { isActive: boolean };
     const user = await usersService.toggleStatus(
-      req.params.id,
+      req.params.id as string,
       isActive,
     );
     return ApiResponse.success(res, 'User status updated', user);
@@ -43,7 +46,9 @@ export const toggleStatus = asyncHandler(
 
 export const softDeleteUser = asyncHandler(
   async (req: Request, res: Response, _next: NextFunction) => {
-    const user = await usersService.softDelete(req.params.id);
+    const user = await usersService.softDelete(
+      req.params.id as string,
+    );
     return ApiResponse.success(res, 'User deactivated', user);
   },
 );

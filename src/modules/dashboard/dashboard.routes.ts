@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type Router as RouterType } from 'express';
 import {
   getSummary,
   getTrends,
@@ -9,7 +9,7 @@ import { requireAuth } from '@/middleware/auth';
 import { requirePermission } from '@/middleware/rbac';
 import { Permission } from '@/constants/permissions';
 
-const router = Router();
+const router: RouterType = Router();
 
 router.get(
   '/summary',

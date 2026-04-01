@@ -46,7 +46,9 @@ export const listRecords = asyncHandler(
 
 export const getRecord = asyncHandler(
   async (req: Request, res: Response, _next: NextFunction) => {
-    const record = await recordsService.getById(req.params.id);
+    const record = await recordsService.getById(
+      req.params.id as string,
+    );
     return ApiResponse.success(
       res,
       'Record fetched successfully',
@@ -58,7 +60,7 @@ export const getRecord = asyncHandler(
 export const updateRecord = asyncHandler(
   async (req: Request, res: Response, _next: NextFunction) => {
     const record = await recordsService.update(
-      req.params.id,
+      req.params.id as string,
       req.body,
     );
     return ApiResponse.success(
@@ -72,7 +74,7 @@ export const updateRecord = asyncHandler(
 export const deleteRecord = asyncHandler(
   async (req: Request, res: Response, _next: NextFunction) => {
     const record = await recordsService.softDelete(
-      req.params.id,
+      req.params.id as string,
     );
     return ApiResponse.success(
       res,
