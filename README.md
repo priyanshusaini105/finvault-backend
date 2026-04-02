@@ -1,194 +1,264 @@
 # FinVault API
 
-Finance data processing and access control backend API with role-based access control and dashboard analytics.
+Finance data processing and access control backend for dashboard applications. Built with TypeScript, Express, PostgreSQL, and Prisma for the Zorvyn FinTech Backend Intern Assessment.
 
-## Overview
+## Why This Project
 
-FinVault is a TypeScript/Express.js backend for managing financial records with granular permission-based access control. It provides aggregated dashboard data and CRUD operations for financial records, supporting three user roles: Viewer, Analyst, and Admin.
+This project demonstrates backend fundamentals expected in real finance systems:
 
-### Tech Stack
+- Clear API design with modular service boundaries
+- Strict role-based access control (RBAC) at middleware level
+- Reliable input validation and consistent error contracts
+- Dashboard-ready aggregation APIs beyond basic CRUD
 
-- **Language**: TypeScript (Node.js 20+)
-- **Framework**: Express.js 5
-- **Database**: PostgreSQL with Prisma ORM
-- **Authentication**: JWT (jsonwebtoken + bcryptjs)
-- **Validation**: Zod schemas
-- **API Documentation**: Swagger/OpenAPI (swagger-ui-express + swagger-jsdoc)
-- **Package Manager**: pnpm
+## Assignment Mapping (Core Requirements)
 
-## Getting Started
+- [x] User and role management (`/api/users`, role/status updates)
+- [x] Financial records management (CRUD + filtering + pagination)
+- [x] Dashboard summary APIs (`/api/dashboard/summary`, `trends`, `categories`, `recent`)
+- [x] Access control logic (`requireAuth` + `requirePermission(...)` middleware)
+- [x] Validation and error handling (Zod + global error middleware + `ApiError`)
+- [x] Data persistence (PostgreSQL + Prisma)
+
+## Feature Highlights
+
+- JWT authentication with default registration role `VIEWER`
+- Three roles: `VIEWER`, `ANALYST`, `ADMIN`
+- Financial record lifecycle with soft delete (`deletedAt`)
+- Filterable and paginated record listing
+- Summary analytics for totals, trends, categories, and recent activity
+- Swagger docs for quick endpoint exploration at `/api/docs`
+
+## Tech Stack
+
+- Language: TypeScript (Node.js)
+- Framework: Express 5
+- Database: PostgreSQL
+- ORM: Prisma 7 with `@prisma/adapter-pg`
+- Auth: `jsonwebtoken` + `bcryptjs`
+- Validation: Zod
+- Testing: Jest
+- Package manager: pnpm
+
+## Project Structure
+
+```text
+src/
+  config/          # Prisma client + validated environment config
+  constants/       # Permission map, HTTP status, error codes
+  middleware/      # auth, RBAC, validation, error handling
+  modules/
+    auth/          # register, login, me
+    users/         # list/get/update role/status/deactivate
+    records/       # CRUD + filters + pagination + soft delete
+    dashboard/     # summary/trends/categories/recent aggregations
+  types/           # Express request augmentation + shared types
+  utils/           # ApiResponse, ApiError, asyncHandler
+  app.ts           # app wiring + routes + Swagger
+  server.ts        # entrypoint
+prisma/
+  schema.prisma
+  seed.ts
+```
+
+## Quick Start
 
 ### Prerequisites
 
-- Node.js 20 or higher
-- pnpm package manager
-- PostgreSQL database
+- Node.js 20+
+- pnpm
+- PostgreSQL
 
-### Installation
+### Setup
 
-1. Clone the repository
-2. Copy environment variables:
-   ```bash
-   cp .env.example .env
-   ```
-3. Edit `.env` and configure your `DATABASE_URL`
-4. Install dependencies:
-   ```bash
-   pnpm install
-   ```
-5. Generate Prisma client:
-   ```bash
-   pnpm db:generate
-   ```
-6. Run database migrations:
-   ```bash
-   pnpm db:migrate
-   ```
-7. Seed the database with sample data:
-   ```bash
-   pnpm db:seed
-   ```
-8. Start the development server:
-   ```bash
-   pnpm dev
-   ```
-
-The API will be available at `http://localhost:3000`
-
-### Environment Variables
-
-```
-DATABASE_URL=postgresql://user:password@localhost:5432/finvault
-JWT_SECRET=your-secret-key-here
-JWT_EXPIRES_IN=7d
-PORT=3000
+```bash
+cp .env.example .env
+pnpm install
+pnpm db:generate
+pnpm db:migrate
+pnpm db:seed
+pnpm dev
 ```
 
-## API Documentation
+Server starts at `http://localhost:3000`.
 
-Interactive API documentation is available via Swagger UI at `/api/docs` when the server is running. This provides a full list of endpoints, request/response schemas, and allows testing endpoints directly from your browser.
+Useful URLs:
 
-Access at: `http://localhost:3000/api/docs`
+- Health: `http://localhost:3000/api/health`
+- Swagger docs: `http://localhost:3000/api/docs`
 
-## Architecture
+## Environment Variables
 
-The project follows a modular, domain-driven architecture with clear separation of concerns:
+Use `.env.example` as the base:
 
-```
-src/
-  config/         # Database and environment configuration
-  middleware/     # Auth, RBAC, validation, and error handling
-  modules/       # Feature modules (auth, users, records, dashboard)
-  utils/         # Shared utilities (ApiResponse, ApiError, asyncHandler)
-  app.ts         # Express app setup and middleware registration
-  server.ts      # HTTP server startup
-```
+| Variable         | Description                    | Example                                                            |
+| ---------------- | ------------------------------ | ------------------------------------------------------------------ |
+| `PORT`           | Server port                    | `3000`                                                             |
+| `NODE_ENV`       | Runtime environment            | `development`                                                      |
+| `DATABASE_URL`   | PostgreSQL connection string   | `postgresql://user:password@localhost:5432/finvault?schema=public` |
+| `JWT_SECRET`     | Secret used to sign JWT tokens | `your-super-secret-jwt-key-change-in-production`                   |
+| `JWT_EXPIRES_IN` | Access token TTL               | `7d`                                                               |
 
-### Request Flow
+## Seeded Demo Accounts
 
-1. **Middleware Layer** - Request validation, authentication, and permission checks
-2. **Controller Layer** - Handles HTTP request/response, calls services
-3. **Service Layer** - Business logic, database operations via Prisma
-4. **Database** - PostgreSQL via Prisma client
+`pnpm db:seed` creates three users for quick testing:
 
-### RBAC Implementation
+| Role    | Email                  | Password      |
+| ------- | ---------------------- | ------------- |
+| Viewer  | `viewer@finvault.com`  | `password123` |
+| Analyst | `analyst@finvault.com` | `password123` |
+| Admin   | `admin@finvault.com`   | `password123` |
 
-Role-based access control is enforced at the middleware level using `requirePermission(permission)`. No inline role checks exist in controllers. Permissions are mapped to roles in a centralized permission matrix.
+These credentials are local development data only.
+
+## API Overview
+
+Base path: `/api`
+
+### Auth
+
+| Method | Route                | Access        | Purpose                        |
+| ------ | -------------------- | ------------- | ------------------------------ |
+| `POST` | `/api/auth/register` | Public        | Register user and return token |
+| `POST` | `/api/auth/login`    | Public        | Login and return token         |
+| `GET`  | `/api/auth/me`       | Authenticated | Current user profile           |
+
+### Users
+
+| Method   | Route                   | Access | Purpose                  |
+| -------- | ----------------------- | ------ | ------------------------ |
+| `GET`    | `/api/users`            | Admin  | List users (paginated)   |
+| `GET`    | `/api/users/:id`        | Admin  | Get user by id           |
+| `PATCH`  | `/api/users/:id/role`   | Admin  | Update role              |
+| `PATCH`  | `/api/users/:id/status` | Admin  | Activate/deactivate user |
+| `DELETE` | `/api/users/:id`        | Admin  | Deactivate user          |
+
+### Financial Records
+
+| Method   | Route              | Access               | Purpose                   |
+| -------- | ------------------ | -------------------- | ------------------------- |
+| `POST`   | `/api/records`     | Admin                | Create record             |
+| `GET`    | `/api/records`     | Viewer/Analyst/Admin | List records with filters |
+| `GET`    | `/api/records/:id` | Viewer/Analyst/Admin | Get record by id          |
+| `PATCH`  | `/api/records/:id` | Admin                | Update record             |
+| `DELETE` | `/api/records/:id` | Admin                | Soft delete record        |
+
+### Dashboard
+
+| Method | Route                       | Access   | Purpose                                          |
+| ------ | --------------------------- | -------- | ------------------------------------------------ |
+| `GET`  | `/api/dashboard/summary`    | Viewer+  | Total income, expenses, net balance              |
+| `GET`  | `/api/dashboard/trends`     | Analyst+ | Month-wise income/expense trends (last 6 months) |
+| `GET`  | `/api/dashboard/categories` | Analyst+ | Expense totals by category with percentage       |
+| `GET`  | `/api/dashboard/recent`     | Viewer+  | Latest 10 non-deleted records                    |
 
 ## RBAC Permission Matrix
 
-| Permission | Viewer | Analyst | Admin |
-|-----------|:------:|:-------:|:-----:|
-| records:read | ✅ | ✅ | ✅ |
-| records:write | ❌ | ❌ | ✅ |
-| records:delete | ❌ | ❌ | ✅ |
-| dashboard:summary | ✅ | ✅ | ✅ |
-| dashboard:analytics | ❌ | ✅ | ✅ |
-| users:manage | ❌ | ❌ | ✅ |
+| Permission            | Viewer | Analyst | Admin |
+| --------------------- | :----: | :-----: | :---: |
+| `records:read`        |   ✅   |   ✅    |  ✅   |
+| `records:write`       |   ❌   |   ❌    |  ✅   |
+| `records:delete`      |   ❌   |   ❌    |  ✅   |
+| `dashboard:summary`   |   ✅   |   ✅    |  ✅   |
+| `dashboard:analytics` |   ❌   |   ✅    |  ✅   |
+| `users:manage`        |   ❌   |   ❌    |  ✅   |
 
-## API Endpoints
+## Financial Records: Filters and Pagination
 
-### Auth
-| Method | Route | Access | Description |
-|--------|-------|--------|-------------|
-| POST | `/api/auth/register` | Public | Register new user |
-| POST | `/api/auth/login` | Public | Login and get JWT |
-| GET | `/api/auth/me` | Any auth | Get current user profile |
+`GET /api/records` query parameters:
 
-### Users
-| Method | Route | Access | Description |
-|--------|-------|--------|-------------|
-| GET | `/api/users` | Admin | List all users (paginated) |
-| PATCH | `/api/users/:id/role` | Admin | Update user role |
-| PATCH | `/api/users/:id/status` | Admin | Toggle user active status |
-| DELETE | `/api/users/:id` | Admin | Soft delete user |
+| Param      | Type                  | Notes                            |
+| ---------- | --------------------- | -------------------------------- |
+| `type`     | `INCOME` \| `EXPENSE` | optional                         |
+| `category` | `string`              | optional                         |
+| `dateFrom` | ISO 8601 datetime     | optional, inclusive              |
+| `dateTo`   | ISO 8601 datetime     | optional, inclusive              |
+| `page`     | integer               | default `1`, min `1`             |
+| `limit`    | integer               | default `10`, min `1`, max `100` |
 
-### Financial Records
-| Method | Route | Access | Description |
-|--------|-------|--------|-------------|
-| POST | `/api/records` | Admin | Create a record |
-| GET | `/api/records` | Viewer+ | List records (filterable, paginated) |
-| GET | `/api/records/:id` | Viewer+ | Get single record |
-| PATCH | `/api/records/:id` | Admin | Update record |
-| DELETE | `/api/records/:id` | Admin | Soft delete record |
+Example:
 
-### Dashboard
-| Method | Route | Access | Description |
-|--------|-------|--------|-------------|
-| GET | `/api/dashboard/summary` | Viewer+ | Total income, expenses, net balance |
-| GET | `/api/dashboard/trends` | Analyst+ | Monthly trends (last 6 months) |
-| GET | `/api/dashboard/categories` | Analyst+ | Category breakdown with percentages |
-| GET | `/api/dashboard/recent` | Viewer+ | Last 10 transactions |
+```http
+GET /api/records?type=INCOME&category=salary&dateFrom=2026-01-01T00:00:00.000Z&dateTo=2026-03-31T23:59:59.999Z&page=1&limit=10
+```
 
-### Filtering Records
+## Dashboard Analytics
 
-GET `/api/records` supports the following query parameters:
-- `type`: Filter by `INCOME` or `EXPENSE`
-- `category`: Filter by category string
-- `dateFrom`: ISO 8601 date-time (inclusive start)
-- `dateTo`: ISO 8601 date-time (inclusive end)
-- `page`: Page number (default: 1)
-- `limit`: Items per page (default: 10)
+- `summary`: aggregates `totalIncome`, `totalExpenses`, and `netBalance`
+- `trends`: groups records by `YYYY-MM` and returns income/expense per month
+- `categories`: groups expenses by category and computes percentage share
+- `recent`: returns latest 10 non-deleted records ordered by date desc
 
-Example: `/api/records?type=INCOME&category=Salary&dateFrom=2025-01-01&dateTo=2025-03-31&page=1&limit=10`
+## Validation and Error Handling
 
-## Design Decisions
+- Request body validation uses Zod schemas (`validate(...)` middleware)
+- Query validation uses Zod schemas (`validateQuery(...)` middleware)
+- Auth and permission checks run before controllers
+- Global error handler returns consistent `ApiError` shape
 
-| Decision | Choice | Reasoning |
-|----------|--------|-----------|
-| Database | PostgreSQL | Relational model fits financial data; native GROUP BY for aggregations |
-| ORM | Prisma | Schema-first approach, type-safe queries, clean migration history |
-| Auth | JWT | Stateless and scalable; role embedded in token avoids DB calls per request |
-| Validation | Zod | TypeScript-native, composable schemas, clean error messages |
-| Soft Delete | Yes | Financial records should never be permanently erased - audit trail matters |
-| RBAC Pattern | Permission middleware | Centralized, testable, no scattered role checks in controllers |
+Typical response contract:
 
-## Trade-offs
+```json
+{
+  "success": true,
+  "message": "Records fetched successfully",
+  "data": [],
+  "meta": { "page": 1, "limit": 10, "total": 25 }
+}
+```
 
-| Trade-off | Decision | Why |
-|-----------|----------|-----|
-| Refresh tokens | Access token only (7d expiry) | Keeps auth simple for assessment scope |
-| Rate limiting | Skipped | Not core to evaluation; would add in production |
-| Full-text search | Skipped | Basic category/type filtering covers requirements |
-| Swagger spec | JSDoc annotations | Co-located with routes = easier to keep in sync |
+Validation error contract:
 
-## Assumptions
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "code": "VALIDATION_ERROR",
+  "details": [{ "field": "amount", "issue": "Expected number, received string" }]
+}
+```
 
-- One user has exactly one role (no multi-role support in v1)
-- Amount is stored as `Decimal` (not float) to avoid floating point precision issues with money
-- All dates stored/returned in ISO 8601 UTC format
-- Soft-deleted records are excluded from all reads and aggregations by default
-- Default role for new registrations is `VIEWER` unless explicitly set by admin
-- `category` is a free-form string (no predefined enum) for flexibility
-- JWT tokens expire in 7 days by default
+## Testing
+
+Run all test suites:
+
+```bash
+pnpm test
+```
+
+Current tests cover auth, users, records, and dashboard modules at controller and service levels.
 
 ## Available Scripts
 
-- `pnpm dev` - Start development server with hot reload
-- `pnpm build` - Compile TypeScript to JavaScript
-- `pnpm start` - Start production server
-- `pnpm lint` - Run ESLint
-- `pnpm test` - Run Jest tests
-- `pnpm db:generate` - Generate Prisma client
-- `pnpm db:migrate` - Run database migrations
-- `pnpm db:seed` - Seed database with sample data
+- `pnpm dev` - start development server with hot reload
+- `pnpm build` - compile TypeScript and resolve path aliases
+- `pnpm start` - run compiled server
+- `pnpm lint` - run ESLint
+- `pnpm test` - run Jest tests
+- `pnpm db:generate` - generate Prisma client
+- `pnpm db:migrate` - run Prisma migrations
+- `pnpm db:seed` - seed demo users and financial records
+
+## Design Decisions and Trade-offs
+
+| Decision          | Choice                             | Why                                           |
+| ----------------- | ---------------------------------- | --------------------------------------------- |
+| RBAC enforcement  | Middleware-level permission checks | Centralized and easier to audit/test          |
+| Deletion strategy | Soft delete for records            | Preserve audit history in financial data      |
+| Auth model        | Access JWT only                    | Simpler scope for assignment timeframe        |
+| API docs          | Swagger from route annotations     | Easy reviewer onboarding and endpoint testing |
+
+## Assumptions
+
+- One user has exactly one role
+- Registration defaults to `VIEWER`
+- Category is free-form text
+- Money is stored as Prisma `Decimal` and serialized as number in responses
+- Soft-deleted financial records are excluded from reads and aggregations
+
+## What I Would Improve Next
+
+- Add refresh token rotation and revoke flow
+- Add rate limiting and basic audit logs for admin actions
+- Add integration tests around route/middleware boundaries
+- Add CI pipeline (lint + test + build) and deploy preview
