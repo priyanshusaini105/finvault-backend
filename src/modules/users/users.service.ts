@@ -24,6 +24,26 @@ export const usersService = {
     return { users, page, limit, total };
   },
 
+  async getById(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+      },
+    });
+
+    if (!user) {
+      throw ApiError.notFound('User');
+    }
+
+    return user;
+  },
+
   async updateRole(userId: string, role: Role) {
     const user = await prisma.user.findUnique({
       where: { id: userId },

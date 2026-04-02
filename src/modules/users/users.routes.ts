@@ -1,6 +1,7 @@
 import { Router, type Router as RouterType } from 'express';
 import {
   listUsers,
+  getUserById,
   updateRole,
   toggleStatus,
   softDeleteUser,
@@ -83,6 +84,56 @@ router.get(
   validateQuery(listUsersQuerySchema),
   listUsers,
 );
+
+/**
+ * @openapi
+ * /users/{id}:
+ *   get:
+ *     tags: [Users]
+ *     summary: Get user by ID
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                       enum: [VIEWER, ANALYST, ADMIN]
+ *                     isActive:
+ *                       type: boolean
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *       403:
+ *         description: Forbidden - requires users:manage permission
+ *       404:
+ *         description: User not found
+ */
+router.get('/:id', requireAuth, requirePermission(Permission.USERS_MANAGE), getUserById);
 
 /**
  * @openapi
