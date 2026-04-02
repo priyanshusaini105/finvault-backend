@@ -98,10 +98,14 @@ export const dashboardService = {
   },
 
   async getRecent() {
-    return prisma.financialRecord.findMany({
+    const records = await prisma.financialRecord.findMany({
       where: { deletedAt: null },
       orderBy: { date: 'desc' },
       take: 10,
     });
+    return records.map((r) => ({
+      ...r,
+      amount: Number(r.amount),
+    }));
   },
 };

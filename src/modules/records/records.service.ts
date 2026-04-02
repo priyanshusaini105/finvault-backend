@@ -6,6 +6,13 @@ import type {
   UpdateRecordInput,
 } from './records.schemas';
 
+function serializeRecord(record: Record<string, unknown>) {
+  return {
+    ...record,
+    amount: Number(record.amount),
+  };
+}
+
 export const recordsService = {
   async create(data: CreateRecordInput, createdBy: string) {
     const record = await prisma.financialRecord.create({
@@ -18,7 +25,7 @@ export const recordsService = {
         createdBy,
       },
     });
-    return record;
+    return serializeRecord(record);
   },
 
   async list(filters: {
@@ -33,16 +40,15 @@ export const recordsService = {
       filters;
     const skip = (page - 1) * limit;
 
+    const dateFilter: Record<string, unknown> = {};
+    if (dateFrom) dateFilter.gte = new Date(dateFrom);
+    if (dateTo) dateFilter.lte = new Date(dateTo);
+
     const where = {
       deletedAt: null as Date | null,
       ...(type && { type: type as RecordType }),
       ...(category && { category }),
-      ...(dateFrom && {
-        date: { gte: new Date(dateFrom) },
-      }),
-      ...(dateTo && {
-        date: { lte: new Date(dateTo) },
-      }),
+      ...(Object.keys(dateFilter).length > 0 && { date: dateFilter }),
     };
 
     const [records, total] = await Promise.all([
@@ -55,7 +61,7 @@ export const recordsService = {
       prisma.financialRecord.count({ where }),
     ]);
 
-    return { records, page, limit, total };
+    return { records: records.map(serializeRecord), page, limit, total };
   },
 
   async getById(id: string) {
@@ -63,13 +69,13 @@ export const recordsService = {
       where: { id, deletedAt: null },
     });
     if (!record) throw ApiError.notFound('Record');
-    return record;
+    return serializeRecord(record);
   },
 
   async update(id: string, data: UpdateRecordInput) {
     await this.getById(id);
 
-    return prisma.financialRecord.update({
+    const record = await prisma.financialRecord.update({
       where: { id },
       data: {
         ...(data.amount !== undefined && {
@@ -85,13 +91,15 @@ export const recordsService = {
         }),
       },
     });
+    return serializeRecord(record);
   },
 
   async softDelete(id: string) {
     await this.getById(id);
-    return prisma.financialRecord.update({
+    const record = await prisma.financialRecord.update({
       where: { id },
       data: { deletedAt: new Date() },
     });
+    return serializeRecord(record);
   },
 };

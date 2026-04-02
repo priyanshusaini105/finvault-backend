@@ -3,6 +3,7 @@ import { recordsService } from './records.service';
 import { ApiResponse } from '@/utils/ApiResponse';
 import { asyncHandler } from '@/utils/asyncHandler';
 import { HttpStatus } from '@/constants/httpStatus';
+import type { ListRecordsQueryInput } from './records.query.schema';
 
 export const createRecord = asyncHandler(
   async (req: Request, res: Response, _next: NextFunction) => {
@@ -21,13 +22,13 @@ export const createRecord = asyncHandler(
 
 export const listRecords = asyncHandler(
   async (req: Request, res: Response, _next: NextFunction) => {
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 10;
+    const { type, category, dateFrom, dateTo, page, limit } =
+      req.validatedQuery as ListRecordsQueryInput;
     const result = await recordsService.list({
-      type: req.query.type as string | undefined,
-      category: req.query.category as string | undefined,
-      dateFrom: req.query.dateFrom as string | undefined,
-      dateTo: req.query.dateTo as string | undefined,
+      type,
+      category,
+      dateFrom,
+      dateTo,
       page,
       limit,
     });
