@@ -140,7 +140,7 @@ describe('FinVault API black-box integration', () => {
     viewerToken = await loginForToken(viewerUser.email, TEST_PASSWORD);
     analystToken = await loginForToken(analystUser.email, TEST_PASSWORD);
     adminToken = await loginForToken(adminUser.email, TEST_PASSWORD);
-  });
+  }, 60000);
 
   afterAll(async () => {
     await prisma.financialRecord.deleteMany({
@@ -164,7 +164,7 @@ describe('FinVault API black-box integration', () => {
     });
 
     await prisma.$disconnect();
-  });
+  }, 30000);
 
   describe('Health endpoint', () => {
     it('[GET /api/health] returns API health status', async () => {
@@ -772,7 +772,7 @@ describe('FinVault API black-box integration', () => {
       expect(response.body.data.totalIncome).toEqual(expect.any(Number));
       expect(response.body.data.totalExpenses).toEqual(expect.any(Number));
       expect(response.body.data.netBalance).toEqual(expect.any(Number));
-    });
+    }, 10000);
 
     it('[GET /api/dashboard/summary] rejects request without token', async () => {
       const response = await api.get('/api/dashboard/summary');

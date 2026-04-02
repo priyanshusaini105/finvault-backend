@@ -12,6 +12,21 @@ const app: Express = express();
 // Body parsing
 app.use(express.json());
 
+const getSwaggerServers = () => {
+  const servers = [];
+  
+  // Add production server if API_URL is set
+  const apiUrl = process.env.API_URL;
+  if (apiUrl) {
+    servers.push({ url: apiUrl, description: 'Production' });
+  }
+  
+  // Always include localhost for development
+  servers.push({ url: 'http://localhost:3000/api', description: 'Development' });
+  
+  return servers;
+};
+
 const swaggerSpec = swaggerJSDoc({
   definition: {
     openapi: '3.0.0',
@@ -20,7 +35,7 @@ const swaggerSpec = swaggerJSDoc({
       version: '1.0.0',
       description: 'Finance data processing and access control backend API',
     },
-    servers: [{ url: 'http://localhost:3000/api' }],
+    servers: getSwaggerServers(),
     components: {
       securitySchemes: {
         bearerAuth: {
