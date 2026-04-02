@@ -32,7 +32,7 @@ const swaggerSpec = swaggerJSDoc({
     },
     security: [{ bearerAuth: [] }],
   },
-  apis: ['./src/modules/**/*.routes.ts'],
+  apis: ['./src/app.ts', './src/modules/**/*.routes.ts'],
 });
 
 app.use('/api/docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec));
@@ -44,6 +44,29 @@ app.use('/api/records', recordsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
 // Health check
+/**
+ * @openapi
+ * /health:
+ *   get:
+ *     tags:
+ *       - Health
+ *     summary: Health check
+ *     description: Check if the API is running
+ *     responses:
+ *       200:
+ *         description: API is healthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: FinVault API is running
+ */
 app.get('/api/health', (_req, res) => {
   res.json({ success: true, message: 'FinVault API is running' });
 });
